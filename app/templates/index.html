@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+
+    <meta charset="utf-8">
+    <title>テスト</title>
+    <link rel="stylesheet" href="../static/css/style.css?{{ q }}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    {% if head %}
+      {{ head | safe }}
+    {% else %}
+    {% endif %}
+  </head>
+  <body>
+    <div id="wrap" class="wrap">
+      <div class="loading">
+        <img src="../static/images/load.svg" alt="ローディング画像">
+      </div>
+      <div class="menu">
+        <header id=header>
+          <h1 id="main-title">
+            <a id="title-link" href="{{ url_for('index') }}">松戸市内 図書館検索</a>
+          </h1>
+          <nav id="global-nav">
+            <div id="global-nav-wrap">
+              <button id="using-btn" class="btn sub-content-btn" type="button" name="button" data-sub="using">使用方法</button>
+              {% if head and div and script %}
+                <button class="btn sub-content-btn" type="button" name="button" data-sub="keyword">登録キーワード</button>
+                <button class="btn" id="detail-btn" type="button" name="button">各館の詳細</button>
+                  <ul id="nav-items">
+                    {% for name in library_names %}
+                      <li class="nav-item sub-content-btn" data-sub="{{ name }}">{{ name }}</li>
+                    {% endfor %}
+                  </ul>
+              {% endif %}
+              <button id="register-btn" class="btn sub-content-btn" type="button" name="button" data-sub="register">新規登録</button>
+            </div>
+          </nav>
+        </header>
+      </div>
+      {% if head and div and script %}
+      <div id="using-area" class="large-sub-contents">
+        <i class="far fa-window-close close-btn"></i>
+        <div class="sub-content" id="using">
+          <div class="content">
+            <div class="content-using" id="using1">
+              <span class="using-text">■検索キーワードを入力</span>
+            </div>
+            <div class="content-using" id="using2">
+              <span class="using-text">■書籍数に応じて円の大きさが変化</span>
+            </div>
+            <div class="content-using" id="using3">
+              <span class="using-text">■登録キーワードの確認</span>
+            </div>
+            <div class="content-using" id="using4">
+              <span class="using-text">■各館に存在するキーワード書籍の詳細</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="keyword-area" class="small-sub-contents">
+        <i class="far fa-window-close close-btn"></i>
+        <div class="sub-content" id="keyword">
+          <div class="content">
+            <div class="description">
+              <p class="text">現在登録されているキーワード図書の一覧です。登録済みのキーワードを削除することができます。</p>
+            </div>
+            <div class="main-content">
+              {% for item in KeywordColors %}
+                <form class="keyword-form" action="{{ url_for('deleteKeyword', keyword=item.keyword) }}" method="post">
+                  <div class="form-keyword-area">
+                    <span class="form-keyword" style="background-color: {{ item.keyword_color }}">{{ item.keyword }}</span>
+                  </div>
+                  <input class="delete-btn" type="submit" name="form-keyword" value="削除">
+                </form>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="register-area" class="small-sub-contents">
+        <i class="far fa-window-close close-btn"></i>
+        <div class="sub-content" id="register">
+          <div class="content">
+            <div class="description">
+              <p class="text">情報収集したいキーワードを登録してみましょう。収集には多少時間がかかる可能性があります。</p>
+            </div>
+            <div class="main-content">
+              <form class="update-keyword-input-form" action="{{ url_for('update') }}" method="post" style="background: red;">
+                <input class="update-input-keyword" type="text" name="keyword" autocomplete="off">
+                <button id="update-input-btn" class="update-input-btn" type="submit" name="button">送信</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% for library in each_library_dic %}
+        <div id="{{ library }}-area" class="small-sub-contents" style="display: none">
+          <i class="far fa-window-close close-btn"></i>
+          <!--一つの図書館コンテナ-->
+          <div id={{ library }} class="library-area sub-content">
+            <p class="library-name">図書館名: {{ library }}</p>
+            <!--図書館の情報コンテナ-->
+            <div class="info-area">
+              {% for basic_info in each_library_dic[library]["basicInfo"] %}
+                <!--一つのキーワードごとのコンテナ-->
+                <div class="keyword-container">
+                  <div class="keyword-box" data-show-keyword-info={{ basic_info["keyword"] }} data-show-keyword-library={{ library }}>
+                    <span class="basic-info">キーワード: {{ basic_info["keyword"] }}</span>
+                    <span class="basic-info">冊数: {{ basic_info["exist_num"] }}</span>
+                  </div>
+                  {% for detail_books_info in each_library_dic[library]["detailBooksInfo"] %}
+                    {% if basic_info["keyword"] == detail_books_info["keyword"] %}
+                      <div class="books-info {{ basic_info["keyword"] }}">
+                        <p class="info">タイトル: {{ detail_books_info["title"] }}</p>
+                        <p class="info">出版社: {{ detail_books_info["publisher"] }}</p>
+                        <p class="info">出版年月: {{ detail_books_info["publish_date"] }}</p>
+                        <p class="info">著者: {{ detail_books_info["author"] }}</p>
+                        <p class="info">貸出の有無: {{ detail_books_info["lend"] }}</p>
+                        <p class="info">所蔵: {{ detail_books_info["holding"] }}</p>
+                        <p class="info">予約状況: {{ detail_books_info["reserve"] }}</p>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      {% endif %}
+      <div class="main-map">
+        {% if div %}
+          {{ div | safe }}
+        {% else %}
+          <div id="using-area" class="default-using-contents">
+            <i class="far fa-window-close close-btn"></i>
+            <div class="sub-content" id="using">
+              <div class="content">
+                <div class="content-using" id="using1">
+                  <span class="using-text">■検索キーワードを入力</span>
+                </div>
+                <div class="content-using" id="using2">
+                  <span class="using-text">■書籍数に応じて円の大きさが変化</span>
+                </div>
+                <div class="content-using" id="using3">
+                  <span class="using-text">■登録キーワードの確認</span>
+                </div>
+                <div class="content-using" id="using4">
+                  <span class="using-text">■各館に存在するキーワード書籍の詳細</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="register-area" class="default-register-contents">
+            <i class="far fa-window-close close-btn"></i>
+            <div class="sub-content" id="register">
+              <div class="content">
+                <div class="description">
+                  <p class="text">情報収集したいキーワードを登録してみましょう。収集には多少時間がかかる可能性があります。</p>
+                </div>
+                <div class="main-content">
+                  <form class="keyword-input-form" action="{{ url_for('update') }}" method="post">
+                    <input class="input-keyword" type="text" name="keyword" autocomplete="off">
+                    <button id="update-input-btn" class="input-btn" type="submit" name="button">送信</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="instead-map">
+            <div class="item" id="default-image-1">
+            </div>
+            <div class="item" id="default-image-2">
+            </div>
+            <div class="item" id="default-image-3">
+            </div>
+            <div class="item" id="default-image-4">
+            </div>
+          </div>
+          <div class="cover"><span id="default-text">キーワードを登録してみましょう</span></div>
+        {% endif %}
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../static/js/script.js?{{ q }}"></script>
+  </body>
+  {% if script %}
+    {{ script | safe }}
+  {% endif %}
+</html>
